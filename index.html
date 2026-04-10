@@ -293,22 +293,59 @@
   .ingreso-row {
     display: grid;
     grid-template-columns: 1fr 130px 130px 120px auto;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
+    padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+    margin-bottom: 10px;
   }
-  .ingreso-row:last-child { border-bottom: none; }
+  .ingreso-row:last-child { margin-bottom: 0; }
   .ingreso-row input[type="text"], .ingreso-row input[type="number"], .ingreso-row select {
     background: var(--surface2);
     border: 1px solid var(--border2);
     color: var(--text);
-    padding: 7px 10px;
+    padding: 9px 10px;
     border-radius: 7px;
     font-size: 13px;
     width: 100%;
   }
   .ingreso-row input:focus, .ingreso-row select:focus { outline: 2px solid var(--accent); }
+  .ingreso-row-label {
+    display: none;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .45px;
+    margin-bottom: 6px;
+  }
+  .ingreso-cell { min-width: 0; }
+  .ingreso-cell.static-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: center;
+  }
+  .ingreso-row.nomina-row { grid-template-columns: 140px minmax(120px, 1fr) 120px 140px 84px; }
+  .ingreso-row.div-row { grid-template-columns: minmax(180px, 1fr) minmax(120px, 1fr) 140px 140px 52px; }
+  .ingreso-row.cuota-row { grid-template-columns: minmax(150px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) 52px; }
+  .ingreso-row.trim-row { grid-template-columns: 90px minmax(110px, 1fr) minmax(110px, 1fr) minmax(130px, 1fr) minmax(110px, 1fr); }
+  .month-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: rgba(108,143,255,0.12);
+    color: #bdd0ff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    width: fit-content;
+  }
+  .mini-note { color: var(--muted); font-size: 12px; }
+  .aut-section-body { display: flex; flex-direction: column; gap: 10px; }
 
   .aut-section {
     background: var(--surface);
@@ -353,9 +390,9 @@
     display: grid;
     grid-template-columns: 1fr 130px 130px 120px auto;
     gap: 8px;
-    padding: 0 0 8px;
+    padding: 0 4px 10px;
     border-bottom: 1px solid var(--border);
-    margin-bottom: 4px;
+    margin-bottom: 10px;
   }
   .ingreso-header span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
   .backup-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; }
@@ -375,8 +412,14 @@
     main { padding: 16px; }
     header { padding: 12px 16px; flex-wrap: wrap; top: 0; }
     .logo-sub { display: none; }
-    .ingreso-row { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .ingreso-row,
+    .ingreso-row.nomina-row,
+    .ingreso-row.div-row,
+    .ingreso-row.cuota-row,
+    .ingreso-row.trim-row { grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; }
     .ingreso-header { display: none; }
+    .ingreso-row-label { display: block; }
+    .ingreso-row > .full-span { grid-column: 1 / -1; }
     .backup-grid { grid-template-columns: 1fr; }
     nav { display: none; }
     main { padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px)); }
@@ -1206,11 +1249,26 @@ function renderNomina(d) {
   document.getElementById('aut-nomina-rows').innerHTML = (d.nomina||[]).map((r,i) => {
     const neto = r.bruto * (1 - r.irpf/100);
     return `<div class="ingreso-row nomina-row" data-month="${r.mes}">
-      <span class="amount-cell" style="font-size:14px;">${r.mes}</span>
-      <input type="number" class="nom-bruto" value="${r.bruto||''}" placeholder="0" oninput="onAutChange()">
-      <input type="number" class="nom-irpf" value="${r.irpf||''}" placeholder="%" step="0.1" oninput="onAutChange()" style="max-width:80px;">
-      <span class="amount-cell up" style="font-size:14px;">${fmt(neto)}</span>
-      <span style="color:var(--muted);font-size:12px;">mensual</span>
+      <div class="ingreso-cell static-cell">
+        <span class="ingreso-row-label">Mes</span>
+        <span class="month-pill">${r.mes}</span>
+      </div>
+      <div class="ingreso-cell">
+        <div class="ingreso-row-label">Bruto</div>
+        <input type="number" class="nom-bruto" value="${r.bruto||''}" placeholder="0" oninput="onAutChange()">
+      </div>
+      <div class="ingreso-cell">
+        <div class="ingreso-row-label">IRPF</div>
+        <input type="number" class="nom-irpf" value="${r.irpf||''}" placeholder="%" step="0.1" oninput="onAutChange()">
+      </div>
+      <div class="ingreso-cell static-cell">
+        <span class="ingreso-row-label">Neto</span>
+        <span class="amount-cell up" style="font-size:14px;">${fmt(neto)}</span>
+      </div>
+      <div class="ingreso-cell static-cell">
+        <span class="ingreso-row-label">Tipo</span>
+        <span class="mini-note">mensual</span>
+      </div>
     </div>`;
   }).join('');
 }
@@ -1219,10 +1277,22 @@ function renderDividendos(d) {
   document.getElementById('aut-dividendo-rows').innerHTML = (d.dividendos||[]).map((r,i) => {
     const neto = r.bruto * 0.81;
     return `<div class="ingreso-row div-row">
-      <input type="text" class="div-concepto" value="${r.concepto}" placeholder="Ej: Reparto Q2" oninput="onAutChange()">
-      <input type="number" class="div-bruto" value="${r.bruto||''}" placeholder="0" oninput="onAutChange()">
-      <span class="amount-cell" style="color:var(--muted);font-size:13px;">${fmt(r.bruto * 0.19)} (19%)</span>
-      <span class="amount-cell up" style="font-size:14px;">${fmt(neto)}</span>
+      <div class="ingreso-cell">
+        <div class="ingreso-row-label">Concepto</div>
+        <input type="text" class="div-concepto" value="${r.concepto}" placeholder="Ej: Reparto Q2" oninput="onAutChange()">
+      </div>
+      <div class="ingreso-cell">
+        <div class="ingreso-row-label">Bruto</div>
+        <input type="number" class="div-bruto" value="${r.bruto||''}" placeholder="0" oninput="onAutChange()">
+      </div>
+      <div class="ingreso-cell static-cell">
+        <span class="ingreso-row-label">Retención</span>
+        <span class="amount-cell" style="color:var(--muted);font-size:13px;">${fmt(r.bruto * 0.19)} (19%)</span>
+      </div>
+      <div class="ingreso-cell static-cell">
+        <span class="ingreso-row-label">Neto</span>
+        <span class="amount-cell up" style="font-size:14px;">${fmt(neto)}</span>
+      </div>
       <button class="btn danger" style="padding:5px 10px;font-size:12px;" onclick="removeRow(this, 'div-row', 'aut-dividendo-rows')">✕</button>
     </div>`;
   }).join('');
@@ -1231,11 +1301,20 @@ function renderDividendos(d) {
 function renderCuotas(d) {
   document.getElementById('aut-cuota-rows').innerHTML = (d.cuotas||[]).map((r,i) => `
     <div class="ingreso-row cuota-row" style="grid-template-columns:1fr 130px 130px auto;">
-      <select class="cuota-mes" oninput="onAutChange()">
-        ${MONTHS.map(m => `<option ${r.mes===m?'selected':''}>${m}</option>`).join('')}
-      </select>
-      <input type="number" class="cuota-importe" value="${r.cuota||''}" placeholder="0" oninput="onAutChange()">
-      <input type="number" class="cuota-base" value="${r.base||''}" placeholder="0" oninput="onAutChange()">
+      <div class="ingreso-cell">
+        <div class="ingreso-row-label">Mes</div>
+        <select class="cuota-mes" oninput="onAutChange()">
+          ${MONTHS.map(m => `<option ${r.mes===m?'selected':''}>${m}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ingreso-cell">
+        <div class="ingreso-row-label">Cuota</div>
+        <input type="number" class="cuota-importe" value="${r.cuota||''}" placeholder="0" oninput="onAutChange()">
+      </div>
+      <div class="ingreso-cell">
+        <div class="ingreso-row-label">Base</div>
+        <input type="number" class="cuota-base" value="${r.base||''}" placeholder="0" oninput="onAutChange()">
+      </div>
       <button class="btn danger" style="padding:5px 10px;font-size:12px;" onclick="removeRow(this, 'cuota-row', 'aut-cuota-rows')">✕</button>
     </div>
   `).join('');
@@ -1246,14 +1325,27 @@ function renderTrimestres(d) {
     const base = r.ingreso - r.gasto;
     const calc = Math.max(0, base * 0.20);
     return `<div class="ingreso-row trim-row" data-q="${r.q}" style="grid-template-columns:80px 1fr 1fr 1fr 1fr;">
-      <span><span class="tag-trimestre">T${r.q}</span></span>
-      <div><input type="number" class="trim-ingreso inline-input" value="${r.ingreso||''}" placeholder="Ingresos" oninput="onAutChange()" style="width:100%;"></div>
-      <div><input type="number" class="trim-gasto inline-input" value="${r.gasto||''}" placeholder="Gastos" oninput="onAutChange()" style="width:100%;"></div>
-      <div style="display:flex;flex-direction:column;gap:2px;">
+      <div class="ingreso-cell static-cell">
+        <span class="ingreso-row-label">Trimestre</span>
+        <span><span class="tag-trimestre">T${r.q}</span></span>
+      </div>
+      <div class="ingreso-cell">
+        <div class="ingreso-row-label">Ingresos</div>
+        <input type="number" class="trim-ingreso inline-input" value="${r.ingreso||''}" placeholder="Ingresos" oninput="onAutChange()" style="width:100%;">
+      </div>
+      <div class="ingreso-cell">
+        <div class="ingreso-row-label">Gastos</div>
+        <input type="number" class="trim-gasto inline-input" value="${r.gasto||''}" placeholder="Gastos" oninput="onAutChange()" style="width:100%;">
+      </div>
+      <div class="ingreso-cell static-cell" style="display:flex;flex-direction:column;gap:2px;">
+        <span class="ingreso-row-label">Cuota</span>
         <span style="font-size:11px;color:var(--muted);">Cuota calc. (20%)</span>
         <span class="amount-cell" style="color:var(--warning);">${fmt(calc)}</span>
       </div>
-      <div><input type="number" class="trim-pago inline-input" value="${r.pago||''}" placeholder="Pagado" oninput="onAutChange()" style="width:100%;"></div>
+      <div class="ingreso-cell">
+        <div class="ingreso-row-label">Pagado</div>
+        <input type="number" class="trim-pago inline-input" value="${r.pago||''}" placeholder="Pagado" oninput="onAutChange()" style="width:100%;">
+      </div>
     </div>`;
   }).join('');
 
