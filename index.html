@@ -138,16 +138,29 @@
   .btn.green { background: var(--green); color: #0a1f17; }
 
   .accounts-section { margin-bottom: 32px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
   .section-title {
     font-size: 12px;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: .8px;
-    margin-bottom: 12px;
     display: flex;
     align-items: center;
     gap: 8px;
   }
+  .section-total {
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .registro-summary { margin-bottom: 20px; }
   .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink:0; }
 
   table { width: 100%; border-collapse: collapse; }
@@ -749,9 +762,26 @@ function fmtDiff(n) {
 }
 function key(y, m) { return y + '-' + m; }
 function sortedKeys() { return Object.keys(records).sort(); }
+function prevKeyFor(k) {
+  const prevKeys = sortedKeys().filter(pk => pk < k);
+  return prevKeys[prevKeys.length - 1];
+}
 function totalFor(k) {
   if (!records[k]) return 0;
   return Object.values(records[k]).reduce((s, v) => s + (parseFloat(v) || 0), 0);
+}
+function categoryTotalsFor(k, cat) {
+  const catAccounts = accounts.filter(a => a.category === cat);
+  const prevKey = prevKeyFor(k);
+  const current = catAccounts.reduce((sum, a) => sum + (parseFloat(records[k]?.[a.id]) || 0), 0);
+  const previous = catAccounts.reduce((sum, a) => sum + (parseFloat(records[prevKey]?.[a.id]) || 0), 0);
+  return { current, previous, diff: current - previous };
+}
+function monthTotalsFor(k) {
+  const prevKey = prevKeyFor(k);
+  const current = totalFor(k);
+  const previous = prevKey ? totalFor(prevKey) : 0;
+  return { current, previous, diff: current - previous, prevKey };
 }
 function save() {
   localStorage.setItem('jc_accounts', JSON.stringify(accounts));
@@ -1003,8 +1033,7 @@ function loadRegistro() {
   const mes  = document.getElementById('sel-mes').value;
   const anio = document.getElementById('sel-anio').value;
   const k    = key(anio, mes);
-  const prevKeys = sortedKeys().filter(pk => pk < k);
-  const prevKey  = prevKeys[prevKeys.length - 1];
+  const prevKey  = prevKeyFor(k);
 
   if (accounts.length === 0) {
     document.getElementById('registro-content').innerHTML = `<div class="empty"><h2>No tienes cuentas configuradas</h2><p>Ve a <strong>Cuentas</strong> y añade tus cuentas primero.</p></div>`;
@@ -1013,13 +1042,35 @@ function loadRegistro() {
   }
 
   const cats = [...new Set(accounts.map(a => a.category))];
-  let html = `<h2 style="font-size:18px;font-weight:600;margin-bottom:20px;">${MONTHS[parseInt(mes)-1]} ${anio}</h2>`;
+  const monthStats = monthTotalsFor(k);
+  let html = `<h2 style="font-size:18px;font-weight:600;margin-bottom:20px;">${MONTHS[parseInt(mes)-1]} ${anio}</h2>
+    <div class="cards registro-summary">
+      <div class="card">
+        <label>Total del mes</label>
+        <div class="val" id="registro-month-total">${fmt(monthStats.current)}</div>
+        <div class="sub neutral">patrimonio registrado</div>
+      </div>
+      <div class="card">
+        <label>Variación del mes</label>
+        <div class="val ${monthStats.diff >= 0 ? 'up' : 'down'}" id="registro-month-diff">${fmtDiff(monthStats.diff)}</div>
+        <div class="sub ${monthStats.diff >= 0 ? 'up' : 'down'}" id="registro-month-diff-sub">${monthStats.previous ? ((monthStats.diff/monthStats.previous)*100).toFixed(1) + '%' : '--'}</div>
+      </div>
+      <div class="card">
+        <label>Mes anterior</label>
+        <div class="val" id="registro-month-prev">${fmt(monthStats.previous)}</div>
+        <div class="sub neutral">${monthStats.prevKey || 'Sin referencia'}</div>
+      </div>
+    </div>`;
 
   cats.forEach(cat => {
     const catAccounts = accounts.filter(a => a.category === cat);
+    const catStats = categoryTotalsFor(k, cat);
     html += `
       <div class="accounts-section">
-        <div class="section-title"><span class="dot" style="background:${CAT_COLORS[cat]||'#8a8fa8'};"></span>${CAT_LABELS[cat]||cat}</div>
+        <div class="section-header">
+          <div class="section-title"><span class="dot" style="background:${CAT_COLORS[cat]||'#8a8fa8'};"></span>${CAT_LABELS[cat]||cat}</div>
+          <div class="section-total ${catStats.diff >= 0 ? 'up' : 'down'}" id="cat-total-${cat}-${k}">${fmtDiff(catStats.diff)}</div>
+        </div>
         <div class="registro-table-wrap" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;">
         <table><thead><tr>
           <th>Cuenta</th>
@@ -1057,6 +1108,34 @@ function onAmountChange(input) {
   const diff = val - prev;
   const cell = document.getElementById('diff-' + id + '-' + k);
   if (cell) cell.innerHTML = prev ? `<span class="${diff>=0?'up':'down'}">${fmtDiff(diff)}</span>` : '--';
+  updateRegistroSummaryDisplays(k);
+}
+
+function updateRegistroSummaryDisplays(k) {
+  const monthStats = monthTotalsFor(k);
+  const monthTotalEl = document.getElementById('registro-month-total');
+  const monthDiffEl = document.getElementById('registro-month-diff');
+  const monthDiffSubEl = document.getElementById('registro-month-diff-sub');
+  const monthPrevEl = document.getElementById('registro-month-prev');
+
+  if (monthTotalEl) monthTotalEl.textContent = fmt(monthStats.current);
+  if (monthPrevEl) monthPrevEl.textContent = fmt(monthStats.previous);
+  if (monthDiffEl) {
+    monthDiffEl.textContent = fmtDiff(monthStats.diff);
+    monthDiffEl.className = `val ${monthStats.diff >= 0 ? 'up' : 'down'}`;
+  }
+  if (monthDiffSubEl) {
+    monthDiffSubEl.textContent = monthStats.previous ? ((monthStats.diff / monthStats.previous) * 100).toFixed(1) + '%' : '--';
+    monthDiffSubEl.className = `sub ${monthStats.diff >= 0 ? 'up' : 'down'}`;
+  }
+
+  [...new Set(accounts.map(a => a.category))].forEach(cat => {
+    const el = document.getElementById(`cat-total-${cat}-${k}`);
+    if (!el) return;
+    const catStats = categoryTotalsFor(k, cat);
+    el.textContent = fmtDiff(catStats.diff);
+    el.className = `section-total ${catStats.diff >= 0 ? 'up' : 'down'}`;
+  });
 }
 
 function saveRegistro() { save(); notify('💾 Mes guardado'); }
