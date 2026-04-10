@@ -156,26 +156,30 @@
     font-size: 12px;
     color: var(--muted);
     font-weight: 500;
-    padding: 8px 12px;
+    padding: 8px 10px;
     border-bottom: 1px solid var(--border);
   }
-  td { padding: 11px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  td { padding: 10px; border-bottom: 1px solid var(--border); font-size: 14px; }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: rgba(255,255,255,0.02); }
 
   .amount-cell { font-weight: 600; font-variant-numeric: tabular-nums; }
-  .change-cell { font-size: 13px; white-space: nowrap; min-width: 110px; }
+  .change-cell { font-size: 13px; white-space: nowrap; min-width: 88px; }
   .registro-table-wrap { overflow-x: auto; }
-  .registro-table-wrap table { min-width: 720px; }
+  .registro-table-wrap table { width: max-content; min-width: 100%; }
+  .registro-table-wrap th,
+  .registro-table-wrap td { white-space: nowrap; }
+  .registro-table-wrap th:first-child,
+  .registro-table-wrap td:first-child { white-space: normal; }
 
   input[type="number"].inline-input {
     background: var(--surface2);
     border: 1px solid var(--border2);
     color: var(--text);
-    padding: 6px 10px;
+    padding: 6px 8px;
     border-radius: 6px;
     font-size: 14px;
-    width: 140px;
+    width: 104px;
     font-variant-numeric: tabular-nums;
   }
   input[type="number"].inline-input:focus { outline: 2px solid var(--accent); border-color: transparent; }
@@ -975,7 +979,7 @@ function loadRegistro() {
         <div class="section-title"><span class="dot" style="background:${CAT_COLORS[cat]||'#8a8fa8'};"></span>${CAT_LABELS[cat]||cat}</div>
         <div class="registro-table-wrap" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;">
         <table><thead><tr>
-          <th style="width:35%">Cuenta</th>
+          <th>Cuenta</th>
           <th>Saldo anterior</th>
           <th>Saldo actual</th>
           <th>Variación</th>
