@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JuanContable — Finanzas de Juan Cotrina</title>
+<meta name="theme-color" content="#13253e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JuanContable">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="assets/juancontable-icon-1024.png">
+<link rel="icon" type="image/png" href="assets/juancontable-icon-1024.png">
+<link rel="manifest" href="manifest.json">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --surface3: #151a24;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #f0f0f0;
+    --muted: #8a8fa8;
+    --accent: #6c8fff;
+    --danger: #ff6b6b;
+    --warning: #ffc857;
+    --green: #4ecca3;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); }
+  body {
+    background:
+      radial-gradient(circle at top, rgba(108,143,255,0.12), transparent 32%),
+      linear-gradient(180deg, #0c1018 0%, #0f1117 100%);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overscroll-behavior-y: contain;
+    -webkit-tap-highlight-color: transparent;
+    padding-top: env(safe-area-inset-top, 0);
+  }
+
+  header {
+    background: rgba(26,29,39,0.9);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 16px;
+  }
+  .logo { display: flex; align-items: baseline; gap: 2px; }
+  .logo-juan { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -1px; }
+  .logo-con { font-size: 22px; font-weight: 800; color: var(--accent); letter-spacing: -1px; }
+  .logo-table { font-size: 22px; font-weight: 300; color: var(--muted); letter-spacing: -0.5px; }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-left: 8px; letter-spacing: .5px; align-self: center; }
+
+  nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  nav button {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  nav button.active, nav button:hover {
+    background: var(--surface2);
+    border-color: var(--border2);
+    color: var(--text);
+  }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; padding-bottom: 120px; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .mobile-nav { display: none; }
+  .mobile-nav button { -webkit-appearance: none; appearance: none; }
+  body.standalone header { top: 0; }
+  body.standalone .logo-sub { opacity: .9; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .card label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; display: block; margin-bottom: 8px; }
+  .card .val { font-size: 26px; font-weight: 700; letter-spacing: -1px; }
+  .card .sub { font-size: 13px; margin-top: 4px; }
+  .up { color: var(--green); }
+  .down { color: var(--danger); }
+  .neutral { color: var(--muted); }
+
+  .toolbar {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .toolbar select, .toolbar input[type="number"] {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .btn:hover { opacity: .85; }
+  .btn.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+  .btn.danger { background: var(--danger); }
+  .btn.green { background: var(--green); color: #0a1f17; }
+
+  .accounts-section { margin-bottom: 32px; }
+  .section-title {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink:0; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .amount-cell { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .change-cell { font-size: 13px; white-space: nowrap; min-width: 110px; }
+  .registro-table-wrap { overflow-x: auto; }
+  .registro-table-wrap table { min-width: 720px; }
+
+  input[type="number"].inline-input {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 140px;
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="number"].inline-input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .3px;
+  }
+  .badge-bank    { background: rgba(108,143,255,.15); color: #8aa8ff; }
+  .badge-invest  { background: rgba(78,204,163,.15);  color: #4ecca3; }
+  .badge-stocks  { background: rgba(255,200,87,.15);  color: #ffc857; }
+  .badge-crypto  { background: rgba(255,107,107,.15); color: #ff8f8f; }
+  .badge-campo   { background: rgba(120,180,80,.15);  color: #90c95a; }
+  .badge-other   { background: rgba(138,143,168,.15); color: #aaa; }
+
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .chart-title { font-size: 15px; font-weight: 600; margin-bottom: 20px; }
+
+  .account-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .account-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .account-item input[type="text"] {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: 7px;
+    font-size: 14px;
+    flex: 1;
+    min-width: 140px;
+  }
+  .account-item select {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: 7px;
+    font-size: 14px;
+  }
+
+  .add-account-form {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 24px;
+  }
+  .form-field { display: flex; flex-direction: column; gap: 6px; }
+  .form-field label { font-size: 12px; color: var(--muted); }
+  .form-field input, .form-field select {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    min-width: 160px;
+  }
+  .form-field input:focus, .form-field select:focus { outline: 2px solid var(--accent); }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty h2 { font-size: 20px; margin-bottom: 8px; color: var(--text); }
+
+  .history-scroll { overflow-x: auto; }
+
+  .save-bar { position: fixed; bottom: 24px; right: 24px; z-index: 200; display: flex; gap: 10px; }
+  .save-bar button { box-shadow: 0 4px 20px rgba(108,143,255,.4); }
+
+  .notification {
+    position: fixed;
+    bottom: 80px;
+    right: 24px;
+    background: var(--green);
+    color: #0a1f17;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity .3s;
+    z-index: 300;
+  }
+  .notification.show { opacity: 1; }
+
+  /* ---- AUTÓNOMO ---- */
+  .autonomo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  @media (max-width: 700px) { .autonomo-grid { grid-template-columns: 1fr; } }
+
+  .ingreso-row {
+    display: grid;
+    grid-template-columns: 1fr 130px 130px 120px auto;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ingreso-row:last-child { border-bottom: none; }
+  .ingreso-row input[type="text"], .ingreso-row input[type="number"], .ingreso-row select {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 13px;
+    width: 100%;
+  }
+  .ingreso-row input:focus, .ingreso-row select:focus { outline: 2px solid var(--accent); }
+
+  .aut-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .aut-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .aut-total-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0 0;
+    margin-top: 12px;
+    border-top: 1px solid var(--border2);
+  }
+  .aut-total-label { font-size: 13px; color: var(--muted); }
+  .aut-total-val { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+
+  .tag-trimestre {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(108,143,255,.15);
+    color: #8aa8ff;
+  }
+
+  .ingreso-header {
+    display: grid;
+    grid-template-columns: 1fr 130px 130px 120px auto;
+    gap: 8px;
+    padding: 0 0 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .ingreso-header span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .backup-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; }
+  .backup-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  .backup-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 18px; }
+  .backup-meta .card { padding: 16px; }
+  .helper-text { color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .backup-list { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .backup-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  @media (max-width: 600px) {
+    main { padding: 16px; }
+    header { padding: 12px 16px; flex-wrap: wrap; top: 0; }
+    .logo-sub { display: none; }
+    .ingreso-row { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .ingreso-header { display: none; }
+    .backup-grid { grid-template-columns: 1fr; }
+    nav { display: none; }
+    main { padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px)); }
+    .mobile-nav {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+      background: rgba(21,26,36,0.92);
+      border: 1px solid var(--border2);
+      border-radius: 22px;
+      backdrop-filter: blur(18px);
+      z-index: 250;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+    }
+    .mobile-nav button {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      border-radius: 16px;
+      padding: 10px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .mobile-nav button .icon { font-size: 18px; line-height: 1; }
+    .mobile-nav button.active {
+      background: rgba(108,143,255,0.16);
+      color: var(--text);
+    }
+    .save-bar {
+      right: 12px;
+      bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    }
+    .notification {
+      right: 12px;
+      bottom: calc(154px + env(safe-area-inset-bottom, 0px));
+      left: 12px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:0;">
+    <div class="logo">
+      <span class="logo-juan">Juan</span><span class="logo-con">Con</span><span class="logo-table">table</span>
+    </div>
+    <span class="logo-sub">finanzas de Juan Cotrina</span>
+  </div>
+  <nav>
+    <button class="active" data-page="dashboard" onclick="showPage('dashboard', this)">Resumen</button>
+    <button data-page="registro" onclick="showPage('registro', this)">Registro mensual</button>
+    <button data-page="historial" onclick="showPage('historial', this)">Historial</button>
+    <button data-page="autonomo" onclick="showPage('autonomo', this)">Autónomo / SL</button>
+    <button data-page="cuentas" onclick="showPage('cuentas', this)">Cuentas</button>
+    <button data-page="backup" onclick="showPage('backup', this)">Backup</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="cards" id="summary-cards"></div>
+  <div class="chart-wrap">
+    <div class="chart-title">Evolución del patrimonio</div>
+    <div style="position:relative;height:280px;">
+      <canvas id="patrimonioChart" role="img" aria-label="Evolución del patrimonio total"></canvas>
+    </div>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-title">Distribución actual por categoría</div>
+    <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
+      <div style="position:relative;height:220px;width:220px;flex-shrink:0;">
+        <canvas id="distribucionChart" role="img" aria-label="Distribución por categoría"></canvas>
+      </div>
+      <div id="distribucion-legend" style="flex:1;min-width:180px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTRO MENSUAL -->
+<div id="page-registro" class="page">
+  <div class="toolbar">
+    <div class="form-field">
+      <label>Mes</label>
+      <select id="sel-mes">
+        <option value="01">Enero</option><option value="02">Febrero</option>
+        <option value="03">Marzo</option><option value="04">Abril</option>
+        <option value="05">Mayo</option><option value="06">Junio</option>
+        <option value="07">Julio</option><option value="08">Agosto</option>
+        <option value="09">Septiembre</option><option value="10">Octubre</option>
+        <option value="11">Noviembre</option><option value="12">Diciembre</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label>Año</label>
+      <input type="number" id="sel-anio" min="2000" max="2100" style="width:100px;">
+    </div>
+    <div style="padding-bottom:0;">
+      <button class="btn" onclick="loadRegistro()">Cargar</button>
+    </div>
+  </div>
+  <div id="registro-content">
+    <div class="empty"><h2>Selecciona un mes para registrar</h2><p>Elige el mes y año y pulsa "Cargar"</p></div>
+  </div>
+</div>
+
+<!-- HISTORIAL -->
+<div id="page-historial" class="page">
+  <div class="chart-wrap">
+    <div class="chart-title">Historial por categoría</div>
+    <div style="position:relative;height:300px;">
+      <canvas id="historialChart" role="img" aria-label="Historial de saldos por categoría"></canvas>
+    </div>
+  </div>
+  <div class="history-scroll">
+    <table id="historial-table">
+      <thead><tr id="historial-head"></tr></thead>
+      <tbody id="historial-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- AUTÓNOMO / SL -->
+<div id="page-autonomo" class="page">
+  <div class="toolbar">
+    <div class="form-field">
+      <label>Año fiscal</label>
+      <select id="aut-anio"></select>
+    </div>
+    <div style="padding-bottom:0;">
+      <button class="btn" onclick="loadAutonomo()">Cargar año</button>
+      <button class="btn secondary" style="margin-left:8px;" onclick="addAutAnio()">+ Nuevo año</button>
+    </div>
+  </div>
+
+  <div class="cards" id="aut-cards"></div>
+
+  <div class="aut-section">
+    <div class="aut-section-title">💼 Nómina / retribución de la SL</div>
+    <div class="ingreso-header">
+      <span>Mes</span><span>Bruto (€)</span><span>Retención IRPF</span><span>Neto cobrado</span><span></span>
+    </div>
+    <div id="aut-nomina-rows"></div>
+    <div class="aut-total-bar">
+      <span class="aut-total-label">Total nómina anual</span>
+      <span class="aut-total-val up" id="aut-nomina-total">0 €</span>
+    </div>
+  </div>
+
+  <div class="aut-section">
+    <div class="aut-section-title">🧾 Dividendos / reparto de beneficios</div>
+    <div class="ingreso-header">
+      <span>Concepto</span><span>Importe bruto</span><span>Retención (19%)</span><span>Neto cobrado</span><span></span>
+    </div>
+    <div id="aut-dividendo-rows"></div>
+    <div style="padding-top:12px;">
+      <button class="btn secondary" style="font-size:13px;padding:7px 14px;" onclick="addDividendoRow()">+ Añadir fila</button>
+    </div>
+    <div class="aut-total-bar">
+      <span class="aut-total-label">Total dividendos anuales</span>
+      <span class="aut-total-val up" id="aut-dividendo-total">0 €</span>
+    </div>
+  </div>
+
+  <div class="aut-section">
+    <div class="aut-section-title">📋 Cuota de autónomo (Seguridad Social)</div>
+    <div class="ingreso-header" style="grid-template-columns:1fr 130px 130px auto;">
+      <span>Mes</span><span>Cuota pagada (€)</span><span>Base cotización</span><span></span>
+    </div>
+    <div id="aut-cuota-rows"></div>
+    <div style="padding-top:12px;">
+      <button class="btn secondary" style="font-size:13px;padding:7px 14px;" onclick="addCuotaRow()">+ Añadir mes</button>
+    </div>
+    <div class="aut-total-bar">
+      <span class="aut-total-label">Total cuotas pagadas</span>
+      <span class="aut-total-val down" id="aut-cuota-total">0 €</span>
+    </div>
+  </div>
+
+  <div class="aut-section">
+    <div class="aut-section-title">📊 Declaraciones trimestrales IRPF (Mod. 130 / 131)</div>
+    <div id="aut-trimestres"></div>
+  </div>
+
+  <div class="chart-wrap" style="margin-top:24px;">
+    <div class="chart-title">Ingresos anuales — nómina vs dividendos</div>
+    <div style="position:relative;height:240px;">
+      <canvas id="autChart" role="img" aria-label="Comparativa ingresos autónomo"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- CUENTAS -->
+<div id="page-cuentas" class="page">
+  <div class="add-account-form">
+    <div class="form-field">
+      <label>Nombre de la cuenta</label>
+      <input type="text" id="new-account-name" placeholder="Ej: Cuenta corriente BBVA">
+    </div>
+    <div class="form-field">
+      <label>Categoría</label>
+      <select id="new-account-cat">
+        <option value="bank">🏦 Banco</option>
+        <option value="invest">📈 Inversiones</option>
+        <option value="stocks">📊 Acciones</option>
+        <option value="crypto">₿ Cripto</option>
+        <option value="campo">🐄 Ganadería / Campo</option>
+        <option value="other">📁 Otro</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label>Moneda</label>
+      <select id="new-account-currency">
+        <option value="EUR">€ EUR</option>
+        <option value="USD">$ USD</option>
+        <option value="GBP">£ GBP</option>
+      </select>
+    </div>
+    <div style="padding-bottom:0;">
+      <button class="btn" onclick="addAccount()">+ Añadir cuenta</button>
+    </div>
+  </div>
+  <div class="account-list" id="account-list"></div>
+</div>
+
+<!-- BACKUP -->
+<div id="page-backup" class="page">
+  <div class="backup-grid">
+    <div class="chart-wrap">
+      <div class="chart-title">Copia de seguridad</div>
+      <p class="helper-text">Descarga un archivo JSON con todas tus cuentas, registros mensuales y datos de autonomo. Tambien puedes restaurarlo despues desde este mismo HTML.</p>
+      <div class="backup-actions">
+        <button class="btn" onclick="downloadBackup()">Descargar backup</button>
+        <button class="btn secondary" onclick="triggerImportBackup()">Importar backup</button>
+      </div>
+      <input type="file" id="backup-file" accept=".json,application/json" style="display:none;" onchange="importBackup(event)">
+      <div class="form-field" style="margin-top:18px;max-width:260px;">
+        <label>Modo de importacion</label>
+        <select id="backup-mode">
+          <option value="replace">Reemplazar todo</option>
+          <option value="merge">Combinar con lo actual</option>
+        </select>
+      </div>
+      <div class="backup-list">
+        <div class="backup-item">
+          <strong>Reemplazar todo</strong>
+          <p class="helper-text">Sobrescribe por completo la informacion actual con la del archivo.</p>
+        </div>
+        <div class="backup-item">
+          <strong>Combinar</strong>
+          <p class="helper-text">Mantiene tus datos y mezcla cuentas, meses y anos fiscales del backup importado.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Resumen almacenado</div>
+      <p class="helper-text">Te muestra de un vistazo lo que hay guardado antes de descargar o restaurar.</p>
+      <div class="backup-meta" id="backup-summary"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<nav class="mobile-nav">
+  <button class="active" data-page="dashboard" onclick="showPage('dashboard', this)">
+    <span class="icon">🏠</span><span>Inicio</span>
+  </button>
+  <button data-page="registro" onclick="showPage('registro', this)">
+    <span class="icon">📝</span><span>Mes</span>
+  </button>
+  <button data-page="historial" onclick="showPage('historial', this)">
+    <span class="icon">📈</span><span>Historial</span>
+  </button>
+  <button data-page="autonomo" onclick="showPage('autonomo', this)">
+    <span class="icon">💼</span><span>SL</span>
+  </button>
+  <button data-page="cuentas" onclick="showPage('cuentas', this)">
+    <span class="icon">💳</span><span>Cuentas</span>
+  </button>
+  <button data-page="backup" onclick="showPage('backup', this)">
+    <span class="icon">💾</span><span>Backup</span>
+  </button>
+</nav>
+
+<div class="save-bar" id="save-bar" style="display:none;">
+  <button class="btn" onclick="saveRegistro()">💾 Guardar mes</button>
+</div>
+<div class="save-bar" id="save-bar-aut" style="display:none;">
+  <button class="btn green" onclick="saveAutonomo()">💾 Guardar autónomo</button>
+</div>
+<div class="notification" id="notification">✓ Guardado</div>
+
+<script>
+// ---- STATE ----
+let accounts = JSON.parse(localStorage.getItem('jc_accounts') || '[]');
+let records  = JSON.parse(localStorage.getItem('jc_records')  || '{}');
+let autData  = JSON.parse(localStorage.getItem('jc_aut')      || '{}');
+// autData: { "2024": { nomina: [{concepto,bruto,irpf}], dividendos: [{concepto,bruto}], cuotas: [{mes,cuota,base}], trimestres: [{q,ingreso,gasto,pago}] } }
+
+let patrimonioChart = null, distribucionChart = null, historialChart = null, autChart = null;
+
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const CAT_LABELS  = { bank:'Banco', invest:'Inversiones', stocks:'Acciones', crypto:'Cripto', campo:'Ganadería / Campo', other:'Otro' };
+const CAT_COLORS  = { bank:'#6c8fff', invest:'#4ecca3', stocks:'#ffc857', crypto:'#ff8f8f', campo:'#90c95a', other:'#8a8fa8' };
+const ALL_CATS    = ['bank','invest','stocks','crypto','campo','other'];
+const BACKUP_VERSION = 1;
+
+function fmt(n, currency='EUR') {
+  return new Intl.NumberFormat('es-ES', { style:'currency', currency, minimumFractionDigits:0, maximumFractionDigits:0 }).format(n || 0);
+}
+function fmtDiff(n) {
+  const sign = n >= 0 ? '+' : '';
+  return sign + new Intl.NumberFormat('es-ES', { style:'currency', currency:'EUR', minimumFractionDigits:0, maximumFractionDigits:0 }).format(n);
+}
+function key(y, m) { return y + '-' + m; }
+function sortedKeys() { return Object.keys(records).sort(); }
+function totalFor(k) {
+  if (!records[k]) return 0;
+  return Object.values(records[k]).reduce((s, v) => s + (parseFloat(v) || 0), 0);
+}
+function save() {
+  localStorage.setItem('jc_accounts', JSON.stringify(accounts));
+  localStorage.setItem('jc_records',  JSON.stringify(records));
+  localStorage.setItem('jc_aut',      JSON.stringify(autData));
+  refreshBackupSummary();
+}
+function notify(msg) {
+  const el = document.getElementById('notification');
+  el.textContent = msg || '✓ Guardado';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll(`nav button[data-page="${name}"]`).forEach(b => b.classList.add('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('save-bar').style.display = 'none';
+  document.getElementById('save-bar-aut').style.display = 'none';
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'historial')  renderHistorial();
+  if (name === 'cuentas')    renderCuentas();
+  if (name === 'autonomo')   initAutonomo();
+  if (name === 'backup')     refreshBackupSummary();
+}
+
+function initAppShell() {
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  document.body.classList.toggle('standalone', !!standalone);
+}
+
+function backupSnapshot() {
+  const keys = sortedKeys();
+  const latestKey = keys[keys.length - 1];
+  return {
+    app: 'JuanContable',
+    version: BACKUP_VERSION,
+    exportedAt: new Date().toISOString(),
+    accounts,
+    records,
+    autData,
+    meta: {
+      accounts: accounts.length,
+      months: keys.length,
+      fiscalYears: Object.keys(autData).length,
+      latestRecord: latestKey || null
+    }
+  };
+}
+
+function refreshBackupSummary() {
+  const target = document.getElementById('backup-summary');
+  if (!target) return;
+  const keys = sortedKeys();
+  const latestKey = keys[keys.length - 1];
+  const totalLatest = latestKey ? totalFor(latestKey) : 0;
+  target.innerHTML = `
+    <div class="card"><label>Cuentas</label><div class="val">${accounts.length}</div><div class="sub neutral">configuradas</div></div>
+    <div class="card"><label>Meses</label><div class="val">${keys.length}</div><div class="sub neutral">${latestKey || 'Sin registros'}</div></div>
+    <div class="card"><label>Anos fiscales</label><div class="val">${Object.keys(autData).length}</div><div class="sub neutral">autonomo / SL</div></div>
+    <div class="card"><label>Ultimo patrimonio</label><div class="val">${fmt(totalLatest)}</div><div class="sub neutral">${latestKey ? 'ultimo mes guardado' : 'sin datos'}</div></div>
+  `;
+}
+
+function downloadBackup() {
+  const data = backupSnapshot();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  link.href = url;
+  link.download = `juancontable-backup-${stamp}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  notify('Backup descargado');
+}
+
+function triggerImportBackup() {
+  const input = document.getElementById('backup-file');
+  if (!input) return;
+  input.value = '';
+  input.click();
+}
+
+function normalizeBackupPayload(payload) {
+  const source = payload && typeof payload === 'object' && ('accounts' in payload || 'records' in payload || 'autData' in payload)
+    ? payload
+    : null;
+  if (!source) throw new Error('Formato no valido');
+
+  return {
+    accounts: Array.isArray(source.accounts) ? source.accounts.filter(acc => acc && acc.id) : [],
+    records: source.records && typeof source.records === 'object' ? source.records : {},
+    autData: source.autData && typeof source.autData === 'object' ? source.autData : {}
+  };
+}
+
+function mergeAccounts(current, incoming) {
+  const map = new Map(current.map(acc => [acc.id, acc]));
+  incoming.forEach(acc => {
+    if (!acc || !acc.id) return;
+    map.set(acc.id, { ...map.get(acc.id), ...acc });
+  });
+  return [...map.values()];
+}
+
+function mergeRecords(current, incoming) {
+  const merged = { ...current };
+  Object.entries(incoming).forEach(([monthKey, monthData]) => {
+    merged[monthKey] = { ...(merged[monthKey] || {}), ...(monthData || {}) };
+  });
+  return merged;
+}
+
+function applyImportedData(nextData, mode) {
+  if (mode === 'merge') {
+    accounts = mergeAccounts(accounts, nextData.accounts);
+    records = mergeRecords(records, nextData.records);
+    autData = { ...autData, ...nextData.autData };
+    return;
+  }
+
+  accounts = nextData.accounts;
+  records = nextData.records;
+  autData = nextData.autData;
+}
+
+function refreshCurrentPage() {
+  renderDashboard();
+  refreshBackupSummary();
+  const activePage = document.querySelector('.page.active');
+  if (!activePage) return;
+  if (activePage.id === 'page-historial') renderHistorial();
+  if (activePage.id === 'page-cuentas') renderCuentas();
+  if (activePage.id === 'page-autonomo') initAutonomo();
+  if (activePage.id === 'page-registro') loadRegistro();
+}
+
+function importBackup(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      const normalized = normalizeBackupPayload(parsed);
+      const mode = document.getElementById('backup-mode').value;
+      const shouldContinue = mode === 'replace'
+        ? confirm('Se reemplazaran todos los datos actuales por los del backup. Quieres continuar?')
+        : true;
+
+      if (!shouldContinue) return;
+
+      applyImportedData(normalized, mode);
+      save();
+      refreshCurrentPage();
+      notify(mode === 'merge' ? 'Backup combinado' : 'Backup restaurado');
+    } catch (error) {
+      alert('No se pudo importar el archivo. Revisa que sea un backup JSON valido de JuanContable.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ---- DASHBOARD ----
+function renderDashboard() {
+  const keys = sortedKeys();
+  const latestKey = keys[keys.length - 1];
+  const prevKey   = keys[keys.length - 2];
+  const firstKey  = keys[0];
+  const latestTotal = latestKey ? totalFor(latestKey) : 0;
+  const prevTotal   = prevKey   ? totalFor(prevKey)   : 0;
+  const monthDiff   = latestTotal - prevTotal;
+  const yearStart   = latestKey ? keys.find(k => k.startsWith(latestKey.slice(0,4))) : null;
+  const yearDiff    = yearStart  ? latestTotal - totalFor(yearStart) : 0;
+
+  document.getElementById('summary-cards').innerHTML = `
+    <div class="card">
+      <label>Patrimonio total</label>
+      <div class="val">${fmt(latestTotal)}</div>
+      <div class="sub neutral">${latestKey ? MONTHS[parseInt(latestKey.split('-')[1])-1] + ' ' + latestKey.split('-')[0] : 'Sin datos'}</div>
+    </div>
+    <div class="card">
+      <label>Cambio mensual</label>
+      <div class="val ${monthDiff >= 0 ? 'up' : 'down'}">${fmtDiff(monthDiff)}</div>
+      <div class="sub ${monthDiff >= 0 ? 'up' : 'down'}">${prevTotal ? ((monthDiff/prevTotal)*100).toFixed(1) + '%' : '--'}</div>
+    </div>
+    <div class="card">
+      <label>Cambio anual</label>
+      <div class="val ${yearDiff >= 0 ? 'up' : 'down'}">${fmtDiff(yearDiff)}</div>
+      <div class="sub ${yearDiff >= 0 ? 'up' : 'down'}">${yearStart && totalFor(yearStart) ? ((yearDiff/totalFor(yearStart))*100).toFixed(1) + '%' : '--'}</div>
+    </div>
+    <div class="card">
+      <label>Meses registrados</label>
+      <div class="val">${keys.length}</div>
+      <div class="sub neutral">${firstKey ? 'Desde ' + MONTHS[parseInt(firstKey.split('-')[1])-1] + ' ' + firstKey.split('-')[0] : '--'}</div>
+    </div>
+  `;
+
+  const labels = keys.map(k => MONTHS[parseInt(k.split('-')[1])-1].slice(0,3) + ' ' + k.split('-')[0].slice(2));
+  const data   = keys.map(k => totalFor(k));
+
+  if (patrimonioChart) patrimonioChart.destroy();
+  patrimonioChart = new Chart(document.getElementById('patrimonioChart').getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'Patrimonio', data, borderColor: '#6c8fff', backgroundColor: 'rgba(108,143,255,0.12)', borderWidth: 2.5, pointBackgroundColor: '#6c8fff', pointRadius: 4, fill: true, tension: 0.3 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8a8fa8', font: { size: 12 } } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8a8fa8', font: { size: 12 }, callback: v => fmt(v) } } } }
+  });
+
+  if (!latestKey || !records[latestKey]) { if (distribucionChart) distribucionChart.destroy(); return; }
+  const catTotals = {};
+  accounts.forEach(a => { const v = parseFloat(records[latestKey]?.[a.id] || 0); catTotals[a.category] = (catTotals[a.category] || 0) + v; });
+  const catKeys = Object.keys(catTotals).filter(c => catTotals[c] > 0);
+
+  if (distribucionChart) distribucionChart.destroy();
+  distribucionChart = new Chart(document.getElementById('distribucionChart').getContext('2d'), {
+    type: 'doughnut',
+    data: { labels: catKeys.map(c => CAT_LABELS[c]), datasets: [{ data: catKeys.map(c => catTotals[c]), backgroundColor: catKeys.map(c => CAT_COLORS[c] || '#8a8fa8'), borderWidth: 2, borderColor: '#1a1d27' }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + fmt(ctx.raw) } } }, cutout: '68%' }
+  });
+
+  document.getElementById('distribucion-legend').innerHTML = catKeys.map(c => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="width:12px;height:12px;border-radius:3px;background:${CAT_COLORS[c]||'#8a8fa8'};display:inline-block;flex-shrink:0;"></span>
+        <span style="font-size:14px;">${CAT_LABELS[c]}</span>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-weight:600;font-size:14px;">${fmt(catTotals[c])}</div>
+        <div style="font-size:12px;color:#8a8fa8;">${latestTotal ? ((catTotals[c]/latestTotal)*100).toFixed(1) : 0}%</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---- REGISTRO ----
+function initSelectors() {
+  const now = new Date();
+  document.getElementById('sel-mes').value  = String(now.getMonth() + 1).padStart(2, '0');
+  document.getElementById('sel-anio').value = now.getFullYear();
+}
+
+function loadRegistro() {
+  const mes  = document.getElementById('sel-mes').value;
+  const anio = document.getElementById('sel-anio').value;
+  const k    = key(anio, mes);
+  const prevKeys = sortedKeys().filter(pk => pk < k);
+  const prevKey  = prevKeys[prevKeys.length - 1];
+
+  if (accounts.length === 0) {
+    document.getElementById('registro-content').innerHTML = `<div class="empty"><h2>No tienes cuentas configuradas</h2><p>Ve a <strong>Cuentas</strong> y añade tus cuentas primero.</p></div>`;
+    document.getElementById('save-bar').style.display = 'none';
+    return;
+  }
+
+  const cats = [...new Set(accounts.map(a => a.category))];
+  let html = `<h2 style="font-size:18px;font-weight:600;margin-bottom:20px;">${MONTHS[parseInt(mes)-1]} ${anio}</h2>`;
+
+  cats.forEach(cat => {
+    const catAccounts = accounts.filter(a => a.category === cat);
+    html += `
+      <div class="accounts-section">
+        <div class="section-title"><span class="dot" style="background:${CAT_COLORS[cat]||'#8a8fa8'};"></span>${CAT_LABELS[cat]||cat}</div>
+        <div class="registro-table-wrap" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;">
+        <table><thead><tr>
+          <th style="width:35%">Cuenta</th>
+          <th>Saldo anterior</th>
+          <th>Saldo actual</th>
+          <th>Variación</th>
+        </tr></thead><tbody>
+    `;
+    catAccounts.forEach(a => {
+      const prev = parseFloat(records[prevKey]?.[a.id] || 0);
+      const curr = parseFloat(records[k]?.[a.id] || '');
+      const diff = curr - prev;
+      html += `<tr>
+        <td>${a.name} <span class="badge badge-${a.category}">${a.currency}</span></td>
+        <td class="amount-cell" style="color:var(--muted)">${prev ? fmt(prev, a.currency) : '--'}</td>
+        <td><input type="number" class="inline-input" data-id="${a.id}" data-key="${k}" value="${isNaN(curr)?'':curr}" placeholder="0" oninput="onAmountChange(this)"></td>
+        <td class="change-cell" id="diff-${a.id}-${k}">${isNaN(curr)||!prev ? '--' : `<span class="${diff>=0?'up':'down'}">${fmtDiff(diff)}</span>`}</td>
+      </tr>`;
+    });
+    html += '</tbody></table></div></div>';
+  });
+
+  document.getElementById('registro-content').innerHTML = html;
+  document.getElementById('save-bar').style.display = 'flex';
+}
+
+function onAmountChange(input) {
+  const id = input.dataset.id, k = input.dataset.key;
+  const val = parseFloat(input.value) || 0;
+  if (!records[k]) records[k] = {};
+  records[k][id] = val;
+  const prevKeys = sortedKeys().filter(pk => pk < k);
+  const prevKey  = prevKeys[prevKeys.length - 1];
+  const prev = parseFloat(records[prevKey]?.[id] || 0);
+  const diff = val - prev;
+  const cell = document.getElementById('diff-' + id + '-' + k);
+  if (cell) cell.innerHTML = prev ? `<span class="${diff>=0?'up':'down'}">${fmtDiff(diff)}</span>` : '--';
+}
+
+function saveRegistro() { save(); notify('💾 Mes guardado'); }
+
+// ---- HISTORIAL ----
+function renderHistorial() {
+  const keys = sortedKeys();
+  document.getElementById('historial-head').innerHTML = '<th>Mes</th>' + accounts.map(a => `<th>${a.name}</th>`).join('') + '<th>Total</th>';
+  document.getElementById('historial-body').innerHTML = keys.map(k => {
+    const parts = k.split('-');
+    const label = MONTHS[parseInt(parts[1])-1] + ' ' + parts[0];
+    const total = totalFor(k);
+    const prevIdx = keys.indexOf(k) - 1;
+    const prevKey = prevIdx >= 0 ? keys[prevIdx] : null;
+    const diff = total - (prevKey ? totalFor(prevKey) : 0);
+    return `<tr>
+      <td style="font-weight:500">${label}</td>
+      ${accounts.map(a => { const v = parseFloat(records[k]?.[a.id] || 0); return `<td class="amount-cell">${v ? fmt(v, a.currency) : '--'}</td>`; }).join('')}
+      <td class="amount-cell">${fmt(total)}${prevKey ? `<br><span class="change-cell ${diff>=0?'up':'down'}" style="font-weight:400">${fmtDiff(diff)}</span>` : ''}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="99" style="padding:40px;text-align:center;color:var(--muted)">Sin datos aún</td></tr>';
+
+  const catKeys = [...new Set(accounts.map(a => a.category))];
+  if (historialChart) historialChart.destroy();
+  historialChart = new Chart(document.getElementById('historialChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: keys.map(k => MONTHS[parseInt(k.split('-')[1])-1].slice(0,3) + ' ' + k.split('-')[0].slice(2)),
+      datasets: catKeys.map(cat => ({
+        label: CAT_LABELS[cat]||cat,
+        data: keys.map(k => accounts.filter(a => a.category===cat).reduce((s,a) => s + parseFloat(records[k]?.[a.id]||0), 0)),
+        borderColor: CAT_COLORS[cat]||'#8a8fa8',
+        backgroundColor: (CAT_COLORS[cat]||'#8a8fa8') + '22',
+        borderWidth: 2, fill: true, tension: 0.3, pointRadius: 3
+      }))
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: '#8a8fa8', font: { size: 12 }, boxWidth: 12, boxHeight: 12 } } }, scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8a8fa8', font: { size: 11 } } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8a8fa8', font: { size: 11 }, callback: v => fmt(v) } } } }
+  });
+}
+
+// ---- CUENTAS ----
+function renderCuentas() {
+  const list = document.getElementById('account-list');
+  if (accounts.length === 0) { list.innerHTML = '<div class="empty"><h2>Sin cuentas</h2><p>Añade tu primera cuenta arriba.</p></div>'; return; }
+  list.innerHTML = accounts.map(a => `
+    <div class="account-item">
+      <span style="width:10px;height:10px;border-radius:50%;background:${CAT_COLORS[a.category]||'#8a8fa8'};flex-shrink:0;"></span>
+      <input type="text" value="${a.name}" onchange="renameAccount('${a.id}', this.value)">
+      <select onchange="recatAccount('${a.id}', this.value)">
+        ${ALL_CATS.map(c => `<option value="${c}" ${a.category===c?'selected':''}>${CAT_LABELS[c]}</option>`).join('')}
+      </select>
+      <span style="color:var(--muted);font-size:13px;">${a.currency}</span>
+      <button class="btn danger" style="padding:7px 14px;font-size:13px;" onclick="deleteAccount('${a.id}')">Eliminar</button>
+    </div>
+  `).join('');
+}
+
+function addAccount() {
+  const name = document.getElementById('new-account-name').value.trim();
+  if (!name) return;
+  accounts.push({ id: 'acc_' + Date.now(), name, category: document.getElementById('new-account-cat').value, currency: document.getElementById('new-account-currency').value });
+  save(); document.getElementById('new-account-name').value = ''; renderCuentas();
+}
+function renameAccount(id, name) { const a = accounts.find(a => a.id===id); if (a) { a.name = name; save(); } }
+function recatAccount(id, cat) { const a = accounts.find(a => a.id===id); if (a) { a.category = cat; save(); renderCuentas(); } }
+function deleteAccount(id) {
+  if (!confirm('¿Eliminar esta cuenta? Se perderán sus datos históricos.')) return;
+  accounts = accounts.filter(a => a.id!==id);
+  Object.keys(records).forEach(k => delete records[k][id]);
+  save(); renderCuentas();
+}
+
+// ---- AUTÓNOMO ----
+function autAnios() { return Object.keys(autData).sort(); }
+function currentAutAnio() { return document.getElementById('aut-anio').value; }
+
+function initAutonomo() {
+  const sel = document.getElementById('aut-anio');
+  const anios = autAnios();
+  const curYear = new Date().getFullYear().toString();
+  if (anios.length === 0) { autData[curYear] = defaultAutAnio(); save(); }
+  const allAnios = autAnios();
+  sel.innerHTML = allAnios.map(y => `<option value="${y}">${y}</option>`).join('');
+  sel.value = allAnios[allAnios.length - 1];
+  loadAutonomo();
+}
+
+function defaultAutAnio() {
+  return {
+    nomina: MONTHS.map(mes => ({ mes, bruto: 0, irpf: 15 })),
+    dividendos: [],
+    cuotas: MONTHS.map((m, i) => ({ mes: m, cuota: 0, base: 0 })),
+    trimestres: [1,2,3,4].map(q => ({ q, ingreso: 0, gasto: 0, pago: 0 }))
+  };
+}
+
+function normalizeNominaRows(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return MONTHS.map(mes => ({ mes, bruto: 0, irpf: 15 }));
+  }
+
+  const byMonth = new Map();
+  rows.forEach((row, index) => {
+    const monthName = MONTHS.includes(row?.mes) ? row.mes : MONTHS[index];
+    if (!monthName || byMonth.has(monthName)) return;
+    byMonth.set(monthName, {
+      mes: monthName,
+      bruto: parseFloat(row?.bruto) || 0,
+      irpf: parseFloat(row?.irpf) || 15
+    });
+  });
+
+  return MONTHS.map(mes => byMonth.get(mes) || { mes, bruto: 0, irpf: 15 });
+}
+
+function addAutAnio() {
+  const y = prompt('Introduce el año:', new Date().getFullYear());
+  if (!y || autData[y]) return;
+  autData[y] = defaultAutAnio();
+  save();
+  initAutonomo();
+  document.getElementById('aut-anio').value = y;
+  loadAutonomo();
+}
+
+function loadAutonomo() {
+  const y = currentAutAnio();
+  if (!autData[y]) { autData[y] = defaultAutAnio(); save(); }
+  const d = autData[y];
+  d.nomina = normalizeNominaRows(d.nomina);
+
+  renderNomina(d);
+  renderDividendos(d);
+  renderCuotas(d);
+  renderTrimestres(d);
+  renderAutChart(y);
+  recalcAutCards(d);
+  document.getElementById('save-bar-aut').style.display = 'flex';
+}
+
+function saveAutonomo() {
+  const y = currentAutAnio();
+  if (!autData[y]) return;
+  // collect nomina
+  autData[y].nomina = [...document.querySelectorAll('.nomina-row')].map(row => ({
+    mes: row.dataset.month,
+    bruto: parseFloat(row.querySelector('.nom-bruto').value) || 0,
+    irpf: parseFloat(row.querySelector('.nom-irpf').value) || 0
+  }));
+  autData[y].dividendos = [...document.querySelectorAll('.div-row')].map(row => ({
+    concepto: row.querySelector('.div-concepto').value,
+    bruto: parseFloat(row.querySelector('.div-bruto').value) || 0
+  }));
+  autData[y].cuotas = [...document.querySelectorAll('.cuota-row')].map(row => ({
+    mes: row.querySelector('.cuota-mes').value,
+    cuota: parseFloat(row.querySelector('.cuota-importe').value) || 0,
+    base: parseFloat(row.querySelector('.cuota-base').value) || 0
+  }));
+  autData[y].trimestres = [...document.querySelectorAll('.trim-row')].map(row => ({
+    q: parseInt(row.dataset.q),
+    ingreso: parseFloat(row.querySelector('.trim-ingreso').value) || 0,
+    gasto: parseFloat(row.querySelector('.trim-gasto').value) || 0,
+    pago: parseFloat(row.querySelector('.trim-pago').value) || 0
+  }));
+  save();
+  recalcAutCards(autData[y]);
+  renderAutChart(y);
+  notify('💾 Datos autónomo guardados');
+}
+
+function recalcAutCards(d) {
+  const nominaNeto = (d.nomina || []).reduce((s, r) => s + r.bruto * (1 - r.irpf/100), 0);
+  const divNeto    = (d.dividendos || []).reduce((s, r) => s + r.bruto * 0.81, 0);
+  const cuotas     = (d.cuotas || []).reduce((s, r) => s + r.cuota, 0);
+  const totalBruto = (d.nomina||[]).reduce((s,r)=>s+r.bruto,0) + (d.dividendos||[]).reduce((s,r)=>s+r.bruto,0);
+
+  document.getElementById('aut-nomina-total').textContent   = fmt(nominaNeto);
+  document.getElementById('aut-dividendo-total').textContent = fmt(divNeto);
+  document.getElementById('aut-cuota-total').textContent    = fmt(cuotas);
+
+  document.getElementById('aut-cards').innerHTML = `
+    <div class="card"><label>Ingresos brutos totales</label><div class="val">${fmt(totalBruto)}</div><div class="sub neutral">nómina + dividendos</div></div>
+    <div class="card"><label>Neto en mano estimado</label><div class="val up">${fmt(nominaNeto + divNeto)}</div><div class="sub neutral">tras retenciones</div></div>
+    <div class="card"><label>Total cuotas SS</label><div class="val down">${fmt(cuotas)}</div><div class="sub neutral">Seguridad Social</div></div>
+    <div class="card"><label>Resultado neto real</label><div class="val ${(nominaNeto+divNeto-cuotas)>=0?'up':'down'}">${fmt(nominaNeto+divNeto-cuotas)}</div><div class="sub neutral">neto menos cuotas</div></div>
+  `;
+}
+
+function renderNomina(d) {
+  document.getElementById('aut-nomina-rows').innerHTML = (d.nomina||[]).map((r,i) => {
+    const neto = r.bruto * (1 - r.irpf/100);
+    return `<div class="ingreso-row nomina-row" data-month="${r.mes}">
+      <span class="amount-cell" style="font-size:14px;">${r.mes}</span>
+      <input type="number" class="nom-bruto" value="${r.bruto||''}" placeholder="0" oninput="onAutChange()">
+      <input type="number" class="nom-irpf" value="${r.irpf||''}" placeholder="%" step="0.1" oninput="onAutChange()" style="max-width:80px;">
+      <span class="amount-cell up" style="font-size:14px;">${fmt(neto)}</span>
+      <span style="color:var(--muted);font-size:12px;">mensual</span>
+    </div>`;
+  }).join('');
+}
+
+function renderDividendos(d) {
+  document.getElementById('aut-dividendo-rows').innerHTML = (d.dividendos||[]).map((r,i) => {
+    const neto = r.bruto * 0.81;
+    return `<div class="ingreso-row div-row">
+      <input type="text" class="div-concepto" value="${r.concepto}" placeholder="Ej: Reparto Q2" oninput="onAutChange()">
+      <input type="number" class="div-bruto" value="${r.bruto||''}" placeholder="0" oninput="onAutChange()">
+      <span class="amount-cell" style="color:var(--muted);font-size:13px;">${fmt(r.bruto * 0.19)} (19%)</span>
+      <span class="amount-cell up" style="font-size:14px;">${fmt(neto)}</span>
+      <button class="btn danger" style="padding:5px 10px;font-size:12px;" onclick="removeRow(this, 'div-row', 'aut-dividendo-rows')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renderCuotas(d) {
+  document.getElementById('aut-cuota-rows').innerHTML = (d.cuotas||[]).map((r,i) => `
+    <div class="ingreso-row cuota-row" style="grid-template-columns:1fr 130px 130px auto;">
+      <select class="cuota-mes" oninput="onAutChange()">
+        ${MONTHS.map(m => `<option ${r.mes===m?'selected':''}>${m}</option>`).join('')}
+      </select>
+      <input type="number" class="cuota-importe" value="${r.cuota||''}" placeholder="0" oninput="onAutChange()">
+      <input type="number" class="cuota-base" value="${r.base||''}" placeholder="0" oninput="onAutChange()">
+      <button class="btn danger" style="padding:5px 10px;font-size:12px;" onclick="removeRow(this, 'cuota-row', 'aut-cuota-rows')">✕</button>
+    </div>
+  `).join('');
+}
+
+function renderTrimestres(d) {
+  document.getElementById('aut-trimestres').innerHTML = (d.trimestres||[]).map(r => {
+    const base = r.ingreso - r.gasto;
+    const calc = Math.max(0, base * 0.20);
+    return `<div class="ingreso-row trim-row" data-q="${r.q}" style="grid-template-columns:80px 1fr 1fr 1fr 1fr;">
+      <span><span class="tag-trimestre">T${r.q}</span></span>
+      <div><input type="number" class="trim-ingreso inline-input" value="${r.ingreso||''}" placeholder="Ingresos" oninput="onAutChange()" style="width:100%;"></div>
+      <div><input type="number" class="trim-gasto inline-input" value="${r.gasto||''}" placeholder="Gastos" oninput="onAutChange()" style="width:100%;"></div>
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <span style="font-size:11px;color:var(--muted);">Cuota calc. (20%)</span>
+        <span class="amount-cell" style="color:var(--warning);">${fmt(calc)}</span>
+      </div>
+      <div><input type="number" class="trim-pago inline-input" value="${r.pago||''}" placeholder="Pagado" oninput="onAutChange()" style="width:100%;"></div>
+    </div>`;
+  }).join('');
+
+  // header for trimestres
+  const hdr = `<div class="ingreso-header" style="grid-template-columns:80px 1fr 1fr 1fr 1fr;margin-bottom:4px;">
+    <span>Trimestre</span><span>Ingresos</span><span>Gastos deducibles</span><span>Cuota estimada</span><span>Pago efectuado</span>
+  </div>`;
+  document.getElementById('aut-trimestres').innerHTML = hdr + document.getElementById('aut-trimestres').innerHTML;
+}
+
+function onAutChange() {
+  // live recalc totals from DOM
+  const nominaNeto = [...document.querySelectorAll('.nomina-row')].reduce((s, row) => {
+    const b = parseFloat(row.querySelector('.nom-bruto').value) || 0;
+    const p = parseFloat(row.querySelector('.nom-irpf').value) || 0;
+    return s + b * (1 - p/100);
+  }, 0);
+  const divNeto = [...document.querySelectorAll('.div-row')].reduce((s, row) => {
+    return s + (parseFloat(row.querySelector('.div-bruto').value)||0) * 0.81;
+  }, 0);
+  const cuotas = [...document.querySelectorAll('.cuota-row')].reduce((s, row) => s + (parseFloat(row.querySelector('.cuota-importe').value)||0), 0);
+  document.getElementById('aut-nomina-total').textContent    = fmt(nominaNeto);
+  document.getElementById('aut-dividendo-total').textContent = fmt(divNeto);
+  document.getElementById('aut-cuota-total').textContent     = fmt(cuotas);
+}
+
+function addDividendoRow() {
+  const y = currentAutAnio();
+  if (!autData[y]) return;
+  autData[y].dividendos.push({ concepto: '', bruto: 0 });
+  renderDividendos(autData[y]);
+}
+function addCuotaRow() {
+  const y = currentAutAnio();
+  if (!autData[y]) return;
+  autData[y].cuotas.push({ mes: 'Enero', cuota: 0, base: 0 });
+  renderCuotas(autData[y]);
+}
+function removeRow(btn, cls, containerId) {
+  btn.closest('.' + cls).remove();
+  onAutChange();
+}
+
+function renderAutChart(y) {
+  const d = autData[y];
+  if (!d) return;
+  const labels = ['Nómina bruta', 'Nómina neta', 'Dividendos brutos', 'Dividendos netos', 'Cuotas SS'];
+  const vals = [
+    (d.nomina||[]).reduce((s,r)=>s+r.bruto,0),
+    (d.nomina||[]).reduce((s,r)=>s+r.bruto*(1-r.irpf/100),0),
+    (d.dividendos||[]).reduce((s,r)=>s+r.bruto,0),
+    (d.dividendos||[]).reduce((s,r)=>s+r.bruto*0.81,0),
+    (d.cuotas||[]).reduce((s,r)=>s+r.cuota,0)
+  ];
+  if (autChart) autChart.destroy();
+  autChart = new Chart(document.getElementById('autChart').getContext('2d'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Importe', data: vals, backgroundColor: ['#6c8fff','#4a6acc','#4ecca3','#2e9e7a','#ff6b6b'], borderRadius: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8a8fa8', font: { size: 12 } } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8a8fa8', font: { size: 12 }, callback: v => fmt(v) } } } }
+  });
+}
+
+// ---- INIT ----
+initAppShell();
+initSelectors();
+renderDashboard();
+refreshBackupSummary();
+</script>
+</body>
+</html>
