@@ -1,0 +1,17 @@
+{
+  "name": "JuanContable",
+  "short_name": "JuanConta",
+  "description": "Finanzas personales y control de SL en formato app.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#13253e",
+  "icons": [
+    {
+      "src": "assets/juancontable-icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
